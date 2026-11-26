@@ -1,0 +1,12 @@
+import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
+const app=readFileSync(new URL('./dist/index.html',import.meta.url),'utf8');
+const server=readFileSync(new URL('./worker/index.js',import.meta.url),'utf8');
+const push=readFileSync(new URL('./worker/push.js',import.meta.url),'utf8');
+const service=readFileSync(new URL('./worker/push-service.js',import.meta.url),'utf8');
+const icon=readFileSync(new URL('./worker/etch-icon.png',import.meta.url)).toString('base64');
+const projection=app.match(/\/\* manager-projection \*\/([\s\S]+?)\/\* end-manager-projection \*\//)?.[1];
+const assignment=app.match(/\/\* lead-assignment \*\/([\s\S]+?)\/\* end-lead-assignment \*\//)?.[1];
+if (!projection || !assignment) throw Error('Missing shared record helpers');
+const output=new URL('./dist/server/',import.meta.url);
+mkdirSync(output,{recursive:true});
+writeFileSync(new URL('index.js',output),'const appHtml = '+JSON.stringify(app)+';\nconst iconPng = '+JSON.stringify(icon)+';\nconst pushService = '+JSON.stringify(service)+';\n'+projection+'\n'+assignment+'\n'+push+'\n'+server);
